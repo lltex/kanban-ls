@@ -1,6 +1,3 @@
-// ===================================================
-// ARQUIVO SCRIPT.JS COMPLETO COM TODAS AS FEATURES
-// ===================================================
 
 // --- Seletores e Variáveis Globais ---
 const themeToggle = document.getElementById('theme-toggle');
@@ -22,7 +19,7 @@ let tasks = JSON.parse(localStorage.getItem('kanban_tasks') || '[]');
 function saveColumns() { localStorage.setItem('kanban_columns', JSON.stringify(columns)); }
 function saveTasks() { localStorage.setItem('kanban_tasks', JSON.stringify(tasks)); }
 
-// --- Lógica do Tema, Logout e Modal (sem alterações) ---
+// --- Lógica do Tema, Logout e Modal ---
 if (localStorage.getItem('theme') === 'dark') { body.classList.add('dark'); themeToggle.checked = true; }
 themeToggle.addEventListener('change', () => { body.classList.toggle('dark', themeToggle.checked); localStorage.setItem('theme', themeToggle.checked ? 'dark' : 'light'); });
 function logout() { localStorage.removeItem('kanban_auth'); window.location.href = 'login.html'; }
@@ -32,7 +29,7 @@ closeModalBtn.addEventListener('click', closeModal);
 window.addEventListener('click', (event) => { if (event.target == modal) closeModal(); });
 
 
-// --- Funções de Renderização (A GRANDE ATUALIZAÇÃO) ---
+// --- Funções de Renderização ---
 
 function renderBoard() {
   kanbanBoard.innerHTML = '';
@@ -41,11 +38,11 @@ function renderBoard() {
     const columnEl = document.createElement('div');
     columnEl.className = 'kanban-column';
     columnEl.id = column.id;
-    columnEl.draggable = true; // Permite que a coluna seja arrastada
+    columnEl.draggable = true;
 
     const h2 = document.createElement('h2');
     h2.textContent = column.title;
-    h2.addEventListener('click', () => makeTitleEditable(h2, column)); // Adiciona evento para editar título
+    h2.addEventListener('click', () => makeTitleEditable(h2, column));
 
     const addTaskBtn = document.createElement('button');
     addTaskBtn.className = 'add-task-btn';
@@ -89,14 +86,19 @@ function addTaskToDOM(id, text, columnId) {
 
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'task-actions';
-    actionsContainer.innerHTML = `<button class="task-view-btn" title="Ver tarefa completa" onclick="openModal('${text.replace(/'/g, "\\'")}')">👁️</button>
+    const safeText = text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    actionsContainer.innerHTML = `<button class="task-view-btn" title="Ver tarefa completa" onclick="openModal('${safeText}')">👁️</button>
                                   <button title="Editar" onclick="editTask('${id}')">✏️</button>
                                   <button title="Excluir" onclick="deleteTask('${id}')">🗑️</button>`;
 
     task.appendChild(textContainer);
     task.appendChild(actionsContainer);
     
-    task.addEventListener('dragstart', (e) => { e.target.classList.add('dragging'); e.dataTransfer.setData('text/plain', id); });
+    // ATUALIZAÇÃO 1: Adiciona um prefixo para identificar que é uma tarefa
+    task.addEventListener('dragstart', (e) => { 
+        e.target.classList.add('dragging'); 
+        e.dataTransfer.setData('text/plain', 'task-' + id); 
+    });
     task.addEventListener('dragend', (e) => e.target.classList.remove('dragging'));
 
     document.querySelector(`#${columnId} .tasks`).appendChild(task);
@@ -105,9 +107,7 @@ function addTaskToDOM(id, text, columnId) {
 // --- Lógica de Ações e Eventos ---
 
 function addEventListenersToButtons() {
-  // Adicionar coluna
   document.getElementById('add-column-btn').addEventListener('click', handleAddColumn);
-  // Adicionar tarefa (agora com input multilinhas)
   document.querySelectorAll('.add-task-btn:not(#add-column-btn)').forEach(button => {
     button.addEventListener('click', (e) => showTaskInput(e.target));
   });
@@ -134,11 +134,9 @@ function showTaskInput(button) {
             <button class="cancel-btn">Cancelar</button>
         </div>
     `;
-
     button.insertAdjacentElement('afterend', container);
     const textarea = container.querySelector('textarea');
     textarea.focus();
-
     container.querySelector('.save-btn').onclick = () => {
         const text = textarea.value.trim();
         if (text) {
@@ -146,7 +144,7 @@ function showTaskInput(button) {
             const newTask = { id: `task-${Date.now()}`, text, column: columnId };
             tasks.push(newTask);
             saveTasks();
-            renderBoard(); // Renderiza tudo para garantir consistência
+            renderBoard();
         }
     };
     container.querySelector('.cancel-btn').onclick = () => {
@@ -161,19 +159,16 @@ function makeTitleEditable(h2, column) {
     input.type = 'text';
     input.value = oldTitle;
     input.className = 'column-title-edit';
-    
     h2.replaceWith(input);
     input.focus();
-
     const save = () => {
         const newTitle = input.value.trim();
         if (newTitle && newTitle !== oldTitle) {
             column.title = newTitle;
             saveColumns();
         }
-        renderBoard(); // Re-renderiza para mostrar o h2 novamente
+        renderBoard();
     };
-
     input.addEventListener('blur', save);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
 }
@@ -188,7 +183,7 @@ function deleteTask(id) {
   if (confirm('Deseja excluir esta tarefa?')) { tasks = tasks.filter(t => t.id !== id); saveTasks(); renderBoard(); }
 }
 
-// --- Lógica de Drag & Drop (Tarefas e Colunas) ---
+// --- Lógica de Drag & Drop (A GRANDE ATUALIZAÇÃO) ---
 
 function addEventListenersToDropZones() {
     // Para tarefas
@@ -196,8 +191,15 @@ function addEventListenersToDropZones() {
         container.addEventListener('dragover', e => { e.preventDefault(); });
         container.addEventListener('drop', e => {
             e.preventDefault();
-            e.stopPropagation();
-            const taskId = e.dataTransfer.getData('text/plain');
+            const data = e.dataTransfer.getData('text/plain');
+            
+            // ATUALIZAÇÃO 2: Só executa a lógica se for uma tarefa
+            if (!data.startsWith('task-')) {
+                return;
+            }
+            e.stopPropagation(); // Impede o evento de borbulhar para o board
+
+            const taskId = data.substring(5); // Pega o ID sem o prefixo 'task-'
             const task = tasks.find(t => t.id === taskId);
             const columnId = container.closest('.kanban-column').id;
             if (task && task.column !== columnId) { task.column = columnId; saveTasks(); renderTasks(); }
@@ -207,14 +209,19 @@ function addEventListenersToDropZones() {
     // Para colunas
     let draggedColumn = null;
     document.querySelectorAll('.kanban-column').forEach(columnEl => {
+        // ATUALIZAÇÃO 3: Adiciona um prefixo para identificar que é uma coluna
         columnEl.addEventListener('dragstart', (e) => {
             e.stopPropagation();
             draggedColumn = columnEl;
+            e.dataTransfer.setData('text/plain', 'column-' + columnEl.id);
             setTimeout(() => e.target.classList.add('dragging-column'), 0);
         });
         columnEl.addEventListener('dragend', (e) => {
-            e.stopPropagation();
-            e.target.classList.remove('dragging-column');
+            if (draggedColumn) {
+                e.stopPropagation();
+                draggedColumn.classList.remove('dragging-column');
+                draggedColumn = null;
+            }
         });
     });
 
@@ -232,9 +239,11 @@ function addEventListenersToDropZones() {
 
     kanbanBoard.addEventListener('drop', (e) => {
         e.preventDefault();
+        if (!draggedColumn) return;
+        
         const newColumnsOrder = [...kanbanBoard.querySelectorAll('.kanban-column')].map(col => col.id);
         columns.sort((a, b) => newColumnsOrder.indexOf(a.id) - newColumnsOrder.indexOf(b.id));
-        saveColumns();
+        saveColumns(); // AGORA VAI SALVAR CORRETAMENTE!
     });
 }
 
