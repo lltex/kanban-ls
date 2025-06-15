@@ -29,67 +29,152 @@ body.dark header {
   background: #374151;
 }
 
-.logout-btn {
-  background: #ef4444; color: white; border: none; padding: 0.5rem 1rem;
-  border-radius: 6px; cursor: pointer;
+.theme-switch { 
+  position: relative; 
+  display: inline-block; 
+  width: 48px; 
+  height: 24px; 
+  margin: 0 1rem; 
 }
-.logout-btn:hover { background: #dc2626; }
 
-.theme-switch { position: relative; display: inline-block; width: 48px; height: 24px; margin: 0 1rem; }
-.theme-switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 24px; cursor: pointer; transition: 0.4s; }
-.slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.4s; }
-input:checked + .slider { background-color: #2563eb; }
-input:checked + .slider:before { transform: translateX(24px); }
+.theme-switch input { 
+  opacity: 0; 
+  width: 0; 
+  height: 0; 
+}
 
-.kanban-board { display: flex; gap: 1rem; padding: 2rem; flex-wrap: wrap; }
+.slider { 
+  position: absolute; 
+  top: 0; left: 0; right: 0; bottom: 0; 
+  background-color: #ccc; 
+  border-radius: 24px; 
+  cursor: pointer; 
+  transition: 0.4s; 
+}
+
+.slider:before { 
+  content: ""; 
+  position: absolute; 
+  height: 18px; 
+  width: 18px; 
+  left: 3px; 
+  bottom: 3px; 
+  background-color: white; 
+  border-radius: 50%; 
+  transition: 0.4s; 
+}
+
+input:checked + .slider { 
+  background-color: #2563eb; 
+}
+
+input:checked + .slider:before { 
+  transform: translateX(24px); 
+}
+
+.kanban-board { 
+  display: flex; 
+  gap: 1rem; 
+  padding: 2rem; 
+  flex-wrap: wrap; 
+}
+
 .kanban-column {
-  background: white; border-radius: 10px; padding: 1rem; width: 300px;
-  min-height: 400px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  display: flex; flex-direction: column;
+  background: white; 
+  border-radius: 10px; 
+  padding: 1rem; 
+  width: 300px;
+  min-height: 400px; 
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  display: flex; 
+  flex-direction: column;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-body.dark .kanban-column { background: #4b5563; }
+
+body.dark .kanban-column { 
+  background: #4b5563; 
+}
 
 .kanban-column h2 { 
   margin-bottom: 1rem;
   cursor: pointer; /* Indica que o título é clicável */
   padding: 0.25rem;
   border-radius: 4px;
+  display: inline-block;
 }
+
 .kanban-column h2:hover {
   background-color: rgba(0,0,0,0.05);
 }
+
 body.dark .kanban-column h2:hover {
   background-color: rgba(255,255,255,0.05);
 }
 
-.add-task-btn { width: 100%; margin-bottom: 1rem; padding: 0.5rem; background: transparent; border: 2px dashed #ccc; cursor: pointer; border-radius: 6px; }
-.tasks { flex-grow: 1; }
-.task-card {
-  background: #ffffff; border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05); cursor: grab; display: flex; flex-direction: column;
+.add-task-btn { 
+  width: 100%; 
+  margin-bottom: 1rem; 
+  padding: 0.5rem; 
+  background: transparent; 
+  border: 2px dashed #ccc; 
+  cursor: pointer; 
+  border-radius: 6px; 
 }
-body.dark .task-card { background: #6b7280; }
 
-.task-actions { display: flex; justify-content: flex-end; align-items: center; margin-top: 0.75rem; }
-.task-actions button { background: none; border: none; cursor: pointer; font-size: 1rem; margin-left: 0.5rem; }
-.task-view-btn { margin-right: auto; }
+.tasks { 
+  flex-grow: 1; 
+}
+
+.task-card {
+  background: #ffffff; 
+  border-radius: 6px; 
+  padding: 1rem; 
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
+  cursor: grab; 
+  display: flex; 
+  flex-direction: column;
+}
+
+body.dark .task-card { 
+  background: #6b7280; 
+}
+
+.task-actions { 
+  display: flex; 
+  justify-content: flex-end; 
+  align-items: center; 
+  margin-top: 0.75rem; 
+}
+
+.task-actions button { 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 1rem; 
+  margin-left: 0.5rem; 
+}
+
+.task-view-btn { 
+  margin-right: auto; 
+}
 
 .task-card-text {
-  word-break: break-word; overflow: hidden; display: -webkit-box;
-  -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  word-break: break-word; 
+  overflow: hidden; 
+  display: -webkit-box;
+  -webkit-line-clamp: 4; 
+  -webkit-box-orient: vertical;
 }
 
 /* (O restante dos estilos do Modal continua o mesmo) */
 /* ... */
 
-
 /* ================================================ */
 /* ESTILOS PARA AS NOVAS FUNCIONALIDADES            */
 /* ================================================ */
 
-/* Efeito visual para a coluna sendo arrastada */
+/* Efeito visual para a coluna sendo arrastada (pode remover, já que drag de colunas foi desativado) */
 .kanban-column.dragging-column {
   opacity: 0.5;
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
@@ -103,6 +188,7 @@ body.dark .task-card { background: #6b7280; }
   border-radius: 6px;
   margin-bottom: 1rem;
 }
+
 .new-task-input-container textarea {
   width: 100%;
   border: none;
@@ -113,14 +199,17 @@ body.dark .task-card { background: #6b7280; }
   font-family: inherit;
   font-size: 1rem;
 }
+
 .new-task-input-container textarea:focus {
   outline: none;
 }
+
 .new-task-input-container .buttons {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
+
 .new-task-input-container button {
   padding: 0.5rem 1rem;
   border: none;
@@ -128,10 +217,12 @@ body.dark .task-card { background: #6b7280; }
   cursor: pointer;
   font-weight: bold;
 }
+
 .new-task-input-container .save-btn {
   background-color: #2563EB;
   color: white;
 }
+
 .new-task-input-container .cancel-btn {
   background-color: #e2e8f0;
   color: #333;
@@ -145,4 +236,31 @@ body.dark .task-card { background: #6b7280; }
   padding: 0.25rem;
   border: 2px solid #2563EB;
   border-radius: 4px;
+}
+
+/* Estilo para o input color picker da coluna */
+input[type="color"] {
+  width: 28px;
+  height: 28px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  vertical-align: middle;
+  border-radius: 4px;
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+input[type="color"]:hover,
+input[type="color"]:focus {
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.8);
+  outline: none;
+}
+
+/* Container flex para o título e o seletor de cor */
+.kanban-column > div:first-child {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
 }
