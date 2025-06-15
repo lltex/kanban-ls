@@ -3,22 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kanban App</title>
+  <title>Painel Kanban</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <script>
+    // Este script de verificação continua aqui, está perfeito.
+    if (localStorage.getItem('kanban_auth') !== 'true') {
+      window.location.href = 'login.html';
+    }
+  </script>
+
   <header>
     <h1>Meu Kanban</h1>
-    <input type="text" id="search-input" placeholder="Buscar tarefas..." />
     <label class="theme-switch">
       <input type="checkbox" id="theme-toggle" />
       <span class="slider"></span>
     </label>
+    <button class="logout-btn" onclick="logout()">Sair</button>
   </header>
 
   <main class="kanban-board"></main>
 
-  <!-- Modal de visualização -->
   <div id="task-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
