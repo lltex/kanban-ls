@@ -1,330 +1,134 @@
-const kanbanBoard = document.querySelector('.kanban-board');
-const themeToggle = document.getElementById('theme-toggle');
-const taskModal = document.getElementById('task-modal');
-const modalTaskText = document.getElementById('modal-task-text');
-const modalCloseBtn = taskModal.querySelector('.close-btn');
+document.addEventListener('DOMContentLoaded', () => {
+  const board = document.querySelector('.kanban-board');
+  const themeToggle = document.getElementById('theme-toggle');
+  const modal = document.getElementById('task-modal');
+  const modalContent = document.getElementById('modal-task-text');
+  const closeModal = document.querySelector('.close-btn');
 
-let columns = JSON.parse(localStorage.getItem('kanban_columns')) || [
-  { id: 'todo', title: 'A Fazer', color: '#ffeb3b' },
-  { id: 'doing', title: 'Fazendo', color: '#03a9f4' },
-  { id: 'done', title: 'Feito', color: '#4caf50' }
-];
-
-let tasks = JSON.parse(localStorage.getItem('kanban_tasks')) || [];
-
-// === SALVAR E CARREGAR ===
-
-function saveColumns() {
-  localStorage.setItem('kanban_columns', JSON.stringify(columns));
-}
-
-function saveTasks() {
-  localStorage.setItem('kanban_tasks', JSON.stringify(tasks));
-}
-
-// === RENDERIZAÇÃO ===
-
-function renderBoard() {
-  kanbanBoard.innerHTML = '';
-
-  columns.forEach(column => {
-    const columnEl = document.createElement('div');
-    columnEl.className = 'kanban-column';
-    columnEl.id = column.id;
-    columnEl.style.backgroundColor = column.color || '#fff';
-    columnEl.draggable = false; // Colunas não arrastáveis
-
-    // Título editável
-    const h2 = document.createElement('h2');
-    h2.textContent = column.title;
-    h2.title = 'Clique para editar o título';
-    h2.addEventListener('click', () => makeTitleEditable(h2, column));
-
-    // Seletor de cor
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.value = column.color || '#ffffff';
-    colorInput.title = 'Selecionar cor da coluna';
-    colorInput.addEventListener('input', (e) => {
-      column.color = e.target.value;
-      saveColumns();
-      renderBoard();
-    });
-
-    // Botão adicionar tarefa
-    const addTaskBtn = document.createElement('button');
-    addTaskBtn.className = 'add-task-btn';
-    addTaskBtn.textContent = '+ Adicionar Tarefa';
-    addTaskBtn.addEventListener('click', () => showNewTaskInput(column.id));
-
-    // Container tarefas
-    const tasksContainer = document.createElement('div');
-    tasksContainer.className = 'tasks';
-
-    columnEl.appendChild(createTitleContainer(h2, colorInput));
-    columnEl.appendChild(addTaskBtn);
-    columnEl.appendChild(tasksContainer);
-
-    kanbanBoard.appendChild(columnEl);
+  // Temas
+  themeToggle.addEventListener('change', () => {
+    document.body.classList.toggle('dark', themeToggle.checked);
+    localStorage.setItem('kanban_theme', themeToggle.checked ? 'dark' : 'light');
   });
-
-  // Botão adicionar coluna
-  const addColumnContainer = document.createElement('div');
-  addColumnContainer.className = 'add-column-container';
-  const addColumnBtn = document.createElement('button');
-  addColumnBtn.textContent = '+ Adicionar outra coluna';
-  addColumnBtn.addEventListener('click', handleAddColumn);
-  addColumnContainer.appendChild(addColumnBtn);
-  kanbanBoard.appendChild(addColumnContainer);
-
-  renderTasks();
-  addDropListeners();
-}
-
-// Cria container flex para título + seletor de cor
-function createTitleContainer(h2, colorInput) {
-  const container = document.createElement('div');
-  container.style.display = 'flex';
-  container.style.alignItems = 'center';
-  container.style.marginBottom = '8px';
-  container.appendChild(h2);
-  container.appendChild(colorInput);
-  return container;
-}
-
-// Renderiza as tarefas dentro das colunas
-function renderTasks() {
-  columns.forEach(column => {
-    const columnEl = document.getElementById(column.id);
-    if (!columnEl) return;
-    const tasksContainer = columnEl.querySelector('.tasks');
-    tasksContainer.innerHTML = '';
-
-    const filteredTasks = tasks.filter(t => t.column === column.id);
-    filteredTasks.forEach(task => {
-      const taskEl = createTaskElement(task);
-      tasksContainer.appendChild(taskEl);
-    });
-  });
-}
-
-function createTaskElement(task) {
-  const card = document.createElement('div');
-  card.className = 'task-card';
-  card.draggable = true;
-  card.id = `task-${task.id}`;
-
-  card.addEventListener('dragstart', (e) => {
-    e.dataTransfer.setData('text/plain', `task-${task.id}`);
-  });
-
-  // Texto da tarefa
-  const textEl = document.createElement('div');
-  textEl.className = 'task-card-text';
-  textEl.textContent = task.text;
-  card.appendChild(textEl);
-
-  // Ações da tarefa (editar, excluir, ver)
-  const actions = document.createElement('div');
-  actions.className = 'task-actions';
-
-  const viewBtn = document.createElement('button');
-  viewBtn.textContent = '👁️';
-  viewBtn.title = 'Visualizar tarefa';
-  viewBtn.className = 'task-view-btn';
-  viewBtn.addEventListener('click', () => openTaskModal(task));
-  actions.appendChild(viewBtn);
-
-  const editBtn = document.createElement('button');
-  editBtn.textContent = '✏️';
-  editBtn.title = 'Editar tarefa';
-  editBtn.addEventListener('click', () => editTask(task));
-  actions.appendChild(editBtn);
-
-  const delBtn = document.createElement('button');
-  delBtn.textContent = '🗑️';
-  delBtn.title = 'Excluir tarefa';
-  delBtn.addEventListener('click', () => deleteTask(task.id));
-  actions.appendChild(delBtn);
-
-  card.appendChild(actions);
-
-  return card;
-}
-
-// === INTERAÇÃO TÍTULO COLUNA ===
-
-function makeTitleEditable(h2, column) {
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = column.title;
-  input.className = 'column-title-edit';
-  h2.replaceWith(input);
-  input.focus();
-
-  input.addEventListener('blur', () => {
-    column.title = input.value.trim() || column.title;
-    saveColumns();
-    renderBoard();
-  });
-
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      input.blur();
-    }
-  });
-}
-
-// === ADICIONAR/EDITAR/EXCLUIR TAREFAS ===
-
-function showNewTaskInput(columnId) {
-  const columnEl = document.getElementById(columnId);
-  const tasksContainer = columnEl.querySelector('.tasks');
-
-  // Evita múltiplos inputs
-  if (tasksContainer.querySelector('.new-task-input-container')) return;
-
-  const container = document.createElement('div');
-  container.className = 'new-task-input-container';
-
-  const textarea = document.createElement('textarea');
-  textarea.placeholder = 'Descrição da nova tarefa...';
-
-  const buttonsDiv = document.createElement('div');
-  buttonsDiv.className = 'buttons';
-
-  const saveBtn = document.createElement('button');
-  saveBtn.textContent = 'Salvar';
-  saveBtn.className = 'save-btn';
-  saveBtn.addEventListener('click', () => {
-    const text = textarea.value.trim();
-    if (!text) return alert('A descrição da tarefa não pode ser vazia.');
-    addTask(columnId, text);
-    container.remove();
-  });
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.textContent = 'Cancelar';
-  cancelBtn.className = 'cancel-btn';
-  cancelBtn.addEventListener('click', () => container.remove());
-
-  buttonsDiv.appendChild(saveBtn);
-  buttonsDiv.appendChild(cancelBtn);
-
-  container.appendChild(textarea);
-  container.appendChild(buttonsDiv);
-
-  tasksContainer.prepend(container);
-  textarea.focus();
-}
-
-function addTask(columnId, text) {
-  const newTask = {
-    id: `t${Date.now()}`,
-    column: columnId,
-    text: text
-  };
-  tasks.push(newTask);
-  saveTasks();
-  renderTasks();
-}
-
-function editTask(task) {
-  const newText = prompt('Editar tarefa:', task.text);
-  if (newText !== null) {
-    task.text = newText.trim() || task.text;
-    saveTasks();
-    renderTasks();
-  }
-}
-
-function deleteTask(taskId) {
-  if (confirm('Deseja realmente excluir esta tarefa?')) {
-    tasks = tasks.filter(t => t.id !== taskId);
-    saveTasks();
-    renderTasks();
-  }
-}
-
-// === DRAG AND DROP DAS TAREFAS ===
-
-function addDropListeners() {
-  document.querySelectorAll('.tasks').forEach(container => {
-    container.addEventListener('dragover', e => e.preventDefault());
-
-    container.addEventListener('drop', e => {
-      e.preventDefault();
-      const data = e.dataTransfer.getData('text/plain');
-      if (!data.startsWith('task-')) return;
-      const taskId = data.substring(5);
-      const task = tasks.find(t => t.id === taskId);
-      const columnId = container.closest('.kanban-column').id;
-      if (task && task.column !== columnId) {
-        task.column = columnId;
-        saveTasks();
-        renderTasks();
-      }
-    });
-  });
-}
-
-// === MODAL TAREFA ===
-
-function openTaskModal(task) {
-  modalTaskText.textContent = task.text;
-  taskModal.style.display = 'flex';
-}
-
-modalCloseBtn.addEventListener('click', () => {
-  taskModal.style.display = 'none';
-});
-
-window.addEventListener('click', e => {
-  if (e.target === taskModal) {
-    taskModal.style.display = 'none';
-  }
-});
-
-// === ADICIONAR COLUNA ===
-
-function handleAddColumn() {
-  const title = prompt('Digite o título da nova coluna:');
-  if (title && title.trim()) {
-    const newColumn = {
-      id: `col-${Date.now()}`,
-      title: title.trim(),
-      color: '#ffffff'
-    };
-    columns.push(newColumn);
-    saveColumns();
-    renderBoard();
-  }
-}
-
-// === MODO ESCURO ===
-
-function loadTheme() {
-  const dark = localStorage.getItem('kanban_dark_mode');
-  if (dark === 'true') {
+  if (localStorage.getItem('kanban_theme') === 'dark') {
     document.body.classList.add('dark');
     themeToggle.checked = true;
-  } else {
-    document.body.classList.remove('dark');
-    themeToggle.checked = false;
   }
-}
 
-themeToggle.addEventListener('change', () => {
-  if (themeToggle.checked) {
-    document.body.classList.add('dark');
-    localStorage.setItem('kanban_dark_mode', 'true');
-  } else {
-    document.body.classList.remove('dark');
-    localStorage.setItem('kanban_dark_mode', 'false');
+  // Modal
+  closeModal.onclick = () => modal.style.display = 'none';
+  window.onclick = e => { if (e.target === modal) modal.style.display = 'none'; }
+
+  // Dados
+  let data = JSON.parse(localStorage.getItem('kanban_data')) || [];
+
+  function saveData() {
+    localStorage.setItem('kanban_data', JSON.stringify(data));
   }
+
+  function createTaskCard(task, columnIndex) {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.draggable = true;
+    card.innerHTML = `
+      <div class="task-text">${task.text}</div>
+      <div class="task-tags">${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}</div>
+    `;
+
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({ columnIndex, taskIndex: data[columnIndex].tasks.indexOf(task) }));
+    });
+
+    card.addEventListener('click', () => {
+      modalContent.textContent = task.text;
+      modal.style.display = 'flex';
+    });
+
+    return card;
+  }
+
+  function renderBoard() {
+    board.innerHTML = '';
+
+    data.forEach((column, columnIndex) => {
+      const col = document.createElement('div');
+      col.className = 'kanban-column';
+      col.style.backgroundColor = column.color || 'white';
+
+      const title = document.createElement('h2');
+      title.textContent = column.name;
+      title.contentEditable = true;
+      title.onblur = () => {
+        column.name = title.textContent.trim();
+        saveData();
+      };
+
+      const controls = document.createElement('div');
+      controls.className = 'column-controls';
+
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'color-picker';
+      colorBtn.textContent = '🎨';
+      colorBtn.onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'color';
+        input.style.position = 'absolute';
+        input.style.opacity = 0;
+        document.body.appendChild(input);
+        input.oninput = () => {
+          column.color = input.value;
+          saveData();
+          renderBoard();
+          input.remove();
+        };
+        input.click();
+      };
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-column';
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.onclick = () => {
+        data.splice(columnIndex, 1);
+        saveData();
+        renderBoard();
+      };
+
+      controls.append(colorBtn, deleteBtn);
+
+      const taskContainer = document.createElement('div');
+      taskContainer.className = 'tasks';
+      taskContainer.ondragover = e => e.preventDefault();
+      taskContainer.ondrop = e => {
+        e.preventDefault();
+        const { columnIndex: fromIndex, taskIndex } = JSON.parse(e.dataTransfer.getData('text/plain'));
+        const [task] = data[fromIndex].tasks.splice(taskIndex, 1);
+        data[columnIndex].tasks.push(task);
+        saveData();
+        renderBoard();
+      };
+
+      column.tasks.forEach(task => {
+        taskContainer.appendChild(createTaskCard(task, columnIndex));
+      });
+
+      col.append(controls, title, taskContainer);
+      board.appendChild(col);
+    });
+
+    // Botão para nova coluna
+    const addCol = document.createElement('button');
+    addCol.textContent = '+ Nova Coluna';
+    addCol.className = 'add-column-btn';
+    addCol.onclick = () => {
+      const name = prompt('Nome da coluna:');
+      if (name) {
+        data.push({ name, color: '#ffffff', tasks: [] });
+        saveData();
+        renderBoard();
+      }
+    };
+    board.appendChild(addCol);
+  }
+
+  renderBoard();
 });
-
-// === INICIALIZAÇÃO ===
-
-loadTheme();
-renderBoard();
