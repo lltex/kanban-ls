@@ -1,4 +1,4 @@
-* {
+* {Add commentMore actions
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -42,30 +42,18 @@ body.dark header {
 input:checked + .slider { background-color: #2563eb; }
 input:checked + .slider:before { transform: translateX(24px); }
 
-.kanban-board { display: flex; gap: 1rem; padding: 2rem; flex-wrap: wrap; }
+.kanban-board { display: flex; gap: 1rem; padding: 2rem; flex-wrap: wrap; justify-content: center; }
 .kanban-column {
   background: white; border-radius: 10px; padding: 1rem; width: 300px;
   min-height: 400px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   display: flex; flex-direction: column;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 body.dark .kanban-column { background: #4b5563; }
 
-.kanban-column h2 { 
-  margin-bottom: 1rem;
-  cursor: pointer; /* Indica que o título é clicável */
-  padding: 0.25rem;
-  border-radius: 4px;
-}
-.kanban-column h2:hover {
-  background-color: rgba(0,0,0,0.05);
-}
-body.dark .kanban-column h2:hover {
-  background-color: rgba(255,255,255,0.05);
-}
-
+.kanban-column h2 { margin-bottom: 1rem; }
 .add-task-btn { width: 100%; margin-bottom: 1rem; padding: 0.5rem; background: transparent; border: 2px dashed #ccc; cursor: pointer; border-radius: 6px; }
 .tasks { flex-grow: 1; }
+
 .task-card {
   background: #ffffff; border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem;
   box-shadow: 0 1px 4px rgba(0,0,0,0.05); cursor: grab; display: flex; flex-direction: column;
@@ -77,72 +65,79 @@ body.dark .task-card { background: #6b7280; }
 .task-view-btn { margin-right: auto; }
 
 .task-card-text {
-  word-break: break-word; overflow: hidden; display: -webkit-box;
-  -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
 }
 
-/* (O restante dos estilos do Modal continua o mesmo) */
-/* ... */
+/* ======================================================================= */
+/* ESTILOS DO MODAL CORRIGIDOS                                             */
+/* ======================================================================= */
 
-
-/* ================================================ */
-/* ESTILOS PARA AS NOVAS FUNCIONALIDADES            */
-/* ================================================ */
-
-/* Efeito visual para a coluna sendo arrastada */
-.kanban-column.dragging-column {
-  opacity: 0.5;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-  transform: scale(1.02);
-}
-
-/* Área de input para nova tarefa */
-.new-task-input-container {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-}
-.new-task-input-container textarea {
+.modal {
+  display: none; /* AQUI ESTÁ A CORREÇÃO PRINCIPAL: COMEÇA ESCONDIDO */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
   width: 100%;
-  border: none;
-  resize: vertical;
-  min-height: 60px;
-  background: transparent;
-  color: inherit; /* Herda a cor do texto do tema (claro/escuro) */
-  font-family: inherit;
-  font-size: 1rem;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  animation: fadeIn 0.3s ease;
+  
+  /* As regras de centralização permanecem, para serem usadas pelo JS */
+  align-items: center;
+  justify-content: center;
 }
-.new-task-input-container textarea:focus {
-  outline: none;
+
+.modal-content {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  animation: slideIn 0.3s ease;
+  max-height: 85vh;
+  overflow-y: auto;
 }
-.new-task-input-container .buttons {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+
+body.dark .modal-content {
+  background-color: #374151;
 }
-.new-task-input-container button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
+
+.close-btn {
+  color: #aaa;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: bold;
   cursor: pointer;
-  font-weight: bold;
-}
-.new-task-input-container .save-btn {
-  background-color: #2563EB;
-  color: white;
-}
-.new-task-input-container .cancel-btn {
-  background-color: #e2e8f0;
-  color: #333;
 }
 
-/* Campo de edição do título da coluna */
-.column-title-edit {
-  width: 100%;
-  font-size: 1.5rem; /* Mesmo tamanho do h2 */
-  font-weight: bold;
-  padding: 0.25rem;
-  border: 2px solid #2563EB;
-  border-radius: 4px;
+.close-btn:hover,
+.close-btn:focus {
+  color: #333;
+  body.dark & { color: #fff; }
+  text-decoration: none;
 }
+
+#modal-task-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* Estilo para o container do botão de adicionar coluna */
+.add-column-container {
+  width: 300px;
+  padding-top: 2.5rem; /* Alinha o botão com os outros */
+}
+
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
