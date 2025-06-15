@@ -20,11 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
   window.onclick = e => { if (e.target === modal) modal.style.display = 'none'; }
 
   // Dados
-  let data = JSON.parse(localStorage.getItem('kanban_data')) || [];
-
-  function saveData() {
-    localStorage.setItem('kanban_data', JSON.stringify(data));
+  let data;
+  try {
+    const stored = JSON.parse(localStorage.getItem('kanban_data'));
+    data = Array.isArray(stored) ? stored : [];
+  } catch (e) {
+    data = [];
   }
+
 
   function createTaskCard(task, columnIndex) {
     const card = document.createElement('div');
